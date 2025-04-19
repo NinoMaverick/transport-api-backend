@@ -4,12 +4,12 @@ const morgan = require('morgan');
 const app = express();
 
 // Middlewares
-app.use(cors());
+// app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/users', require('./routes/userRoutes'));
-// app.use(...) more routes;
+// app.use('/api/users', require('./routes/userRoutes'));
+// // app.use(...) more routes;
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev')); // logs method, route, status, response time
   }
