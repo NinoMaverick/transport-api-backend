@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
   // Basic Profile
@@ -50,7 +51,11 @@ const userSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
 }, {
   timestamps: true
-});
+}
+// Password Reset
+  passwordResetToken: String,
+  passwordResetExpires: Date,
+);
 
 // Indexes
 userSchema.index({ email: 1 });
@@ -88,6 +93,19 @@ userSchema.methods.getMostFrequentRoute = function() {
   }
 
   return { route: maxRoute, count: maxCount };
+};
+
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  this.passwordResetToken = crypto
+  .createHash('sha256')     // 1. Create a SHA-256 hashing object
+  .update(resetToken)       // 2. Feed the original token (random bytes) into it
+  .digest('hex');           // 3. Output the final hashed string in hex format
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 mins
+
+  return resetToken;
 };
 
 const User = mongoose.model('User', userSchema);
