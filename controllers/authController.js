@@ -60,7 +60,7 @@ exports.forgotPassword = async (req, res, next) => {
         message: 'If a user with that email exists, a password reset link has been sent.'
       });
     } catch (err) {
-        
+
       // 8. Handle email failure
       user.passwordResetToken = undefined;
       user.passwordResetExpires = undefined;
@@ -76,7 +76,6 @@ exports.forgotPassword = async (req, res, next) => {
     next(err);
   }
 };
-
 
 exports.logout = (req, res) => {
     res.cookie('jwt', 'loggedout', {

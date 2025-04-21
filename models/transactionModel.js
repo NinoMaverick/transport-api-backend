@@ -9,7 +9,7 @@ const transactionSchema = new mongoose.Schema({
   amount: {
     type: Number,
     required: true
-  },
+  },  
   type: {
     type: String,
     enum: ['debit', 'credit'], // e.g., 'debit' for ride payments, 'credit' for top-ups
