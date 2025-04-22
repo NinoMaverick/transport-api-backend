@@ -1,7 +1,7 @@
-const user = require('../models/userModel');
+const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 
-const signToken = (user) = {
+const signToken = (user) => {
     return jwt.sign(
         { id: user._id, role: user.role },
         process.env.JWT_SECRET,
@@ -9,16 +9,72 @@ const signToken = (user) = {
     );
 };
 
-exports.signup = async (req, res) => {
-    const user = await User.create(req.body);
-    const token = signToken(user._id, user.role);
-    res.status(201).json({ status: 'success', token, data: { user } });
+exports.signup = async (req, res, next) => {
+  try {
+    const { name, email, phoneNumber, password, role } = req.body;
+
+    // Create new user
+    const newUser = await User.create({
+      name,
+      email,
+      phoneNumber,
+      password,
+      role 
+    });
+
+    // Generate JWT token
+    const token = signToken(newUser);
+
+    res.status(201).json({
+      status: 'success',
+      token,
+      data: {
+        user: {
+          id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+          phoneNumber: newUser.phoneNumber,
+          role: newUser.role,
+          walletBalance: newUser.walletBalance,
+        }
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
-exports.login = async (req, res) => {
+
+exports.login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Please provide both email and password',
+      });
+    }
+
     const user = await User.findOne({ email }).select('+password');
-    const token = signToken(user._id, user.role);
-    res.status(200).json({ status: 'success', token });
+
+    if (!user || !(await user.correctPassword(password, user.password))) {
+      return res.status(401).json({
+        status: 'fail',
+        message: 'Incorrect email or password',
+      });
+    }
+
+    // Generate token
+    const token = signToken(user);
+
+    res.status(200).json({
+      status: 'success',
+      token,
+    });
+  } catch (err) {
+    next(err); 
+  }
 };
 
 exports.forgotPassword = async (req, res, next) => {

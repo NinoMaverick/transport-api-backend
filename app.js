@@ -3,18 +3,22 @@ const morgan = require('morgan');
 // const cors = require('cors');
 const app = express();
 
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+
 // Middlewares
 // app.use(cors());
 app.use(express.json());
 
-// Routes
-// app.use('/api/users', require('./routes/userRoutes'));
-// // app.use(...) more routes;
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev')); // logs method, route, status, response time
   }
 
-// Global error handler (optional)
+// Routes
+app.use('/api/v1/auth', authRoutes); // ✅ Mount the auth routes
+app.use('/api/v1/users', userRoutes); // ✅ Mount the user routes
+
+// Global error handler 
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Server error' });

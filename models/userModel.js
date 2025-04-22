@@ -5,19 +5,9 @@ const crypto = require('crypto');
 const userSchema = new mongoose.Schema({
   // Basic Profile
   name: { type: String, required: true, trim: true },
-  email: { 
-    type: String, 
-    required: true, 
-    unique: true, 
-    
-    
-  },
+  email: { type: String, required: true, unique: true },
   phoneNumber: { type: String, required: true },
-  password: { 
-    type: String, 
-    required: true,
-    select: false
-  },
+  password: { type: String, required: true, select: false },
 
   // Role
   role: {
@@ -50,17 +40,15 @@ const userSchema = new mongoose.Schema({
   // Status
   isVerified: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
-}, {
-  timestamps: true
-}
+ 
+
 // Password Reset
   passwordResetToken: String,
   passwordResetExpires: Date,
-);
+}, {
+    timestamps: true
+  });
 
-// Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ phoneNumber: 1 });
 
 // Password hashing
 userSchema.pre('save', async function(next) {
