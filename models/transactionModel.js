@@ -1,26 +1,24 @@
 const mongoose = require('mongoose');
 
 const transactionSchema = new mongoose.Schema({
-  student: {
+  payer: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Student',
+    ref: 'User',
+    required: true
+  },
+  beneficiary: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true
   },
   amount: {
     type: Number,
     required: true
-  },  
+  },
   type: {
     type: String,
-    enum: ['debit', 'credit'], // e.g., 'debit' for ride payments, 'credit' for top-ups
+    enum: ['top-up', 'payment'],
     required: true
-  },
-  purpose: {
-    type: String, // e.g., "Ride from Gate to Campus"
-  },
-  route: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Route' // Optional — link to the route if applicable
   },
   createdAt: {
     type: Date,
@@ -29,4 +27,5 @@ const transactionSchema = new mongoose.Schema({
 });
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
+
 module.exports = Transaction;

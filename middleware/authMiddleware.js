@@ -1,6 +1,7 @@
 // middleware/authMiddleware.js
-const jwt = require('jsonwebtoken');
+
 const User = require('../models/userModel');
+const { verifyToken } = require('../utils/jwtUtils');
 
 exports.protect = async (req, res, next) => {
   let token;
@@ -19,7 +20,7 @@ exports.protect = async (req, res, next) => {
 
   try {
     // 2. Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = await verifyToken(token, process.env.JWT_SECRET);
 
     // 3. Check if user still exists
     const user = await User.findById(decoded.id);

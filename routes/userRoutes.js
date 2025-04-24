@@ -18,8 +18,5 @@ router
 router
   .patch('/updateMe', authMiddleware.protect, userController.updateMe);
 
-router
-  .delete('/deactivateMe', authMiddleware.protect, userController.deactivateMe);
-
 module.exports = router;
 

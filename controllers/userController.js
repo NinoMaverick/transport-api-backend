@@ -1,4 +1,6 @@
 const User = require('../models/userModel');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 
 // @desc    Get all users
 // @route   GET /api/v1/users
@@ -7,7 +9,7 @@ exports.getAllUsers = async (req, res) => {
 try {
     const users = await User.find();
     if(!users) {
-        return res.status(404).json({ status: 'fail', message: 'No usrs found' });   
+        return res.status(404).json({ status: 'fail', message: 'No users found' });   
     }
     res.status(200).json({ status: 'success', data: users });
 } catch (error) {
@@ -82,13 +84,36 @@ exports.deleteUser = async (req, res) => {
 // @desc    Update current user info (excluding password/role)
 // @route   PATCH /api/v1/users/updateMe
 // @access  Logged-in user
-exports.updateMe = async (req, res) => {
-  // To be implemented
-};
+exports.updateMe = catchAsync(async (req, res, next) => {
+  // 1. Create an error if the user tries to update password or role
+  if (req.body.password || req.body.role) {
+    return next(new AppError('You are not allowed to change password or role here.', 400));
+  }
 
-// @desc    Deactivate current user's account
-// @route   DELETE /api/v1/users/deactivateMe
-// @access  Logged-in user
-exports.deactivateMe = async (req, res) => {
-  // To be implemented
-};
+  // 2. Update user document except password and role fields
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user.id, // Logged-in user's ID
+    {
+      name: req.body.name,
+      email: req.body.email,
+      phoneNumber: req.body.phoneNumber,
+    },
+    {
+      new: true, // Return updated document
+      runValidators: true, // Validate the data
+    }
+  );
+
+  // 3. If user not found, return error
+  if (!updatedUser) {
+    return next(new AppError('User not found', 404));
+  }
+
+  // 4. Send response with updated user data
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user: updatedUser,
+    },
+  });
+});

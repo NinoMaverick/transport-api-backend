@@ -18,7 +18,9 @@ const userSchema = new mongoose.Schema({
 
   // Driver-only fields
   licenseNumber: { type: String },
-  assignedRoutes: [String],
+  assignedRoutes: [
+    { type: mongoose.Schema.Types.ObjectId, ref: 'Route' }
+  ],
 
   // Wallet (for student/driver)
   walletBalance: { 
@@ -83,6 +85,20 @@ userSchema.methods.getMostFrequentRoute = function() {
 
   return { route: maxRoute, count: maxCount };
 };
+
+userSchema.statics.signup = async function(data) {
+  const user = await this.create(data);
+  return user;
+};
+
+userSchema.statics.login = async function(email, password) {
+  const user = await this.findOne({ email }).select('+password');
+  if (!user || !(await user.validatePassword(password))) {
+    throw new Error('Invalid credentials');
+  }
+  return user;
+};
+
 
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');

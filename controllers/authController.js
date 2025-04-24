@@ -1,4 +1,6 @@
 const User = require('../models/userModel');
+const { sendPasswordResetEmail } = require('../utils/email');
+
 const jwt = require('jsonwebtoken');
 
 const signToken = (user) => {
@@ -13,8 +15,7 @@ exports.signup = async (req, res, next) => {
   try {
     const { name, email, phoneNumber, password, role } = req.body;
 
-    // Create new user
-    const newUser = await User.create({
+    const newUser = await User.signup({
       name,
       email,
       phoneNumber,
@@ -22,7 +23,6 @@ exports.signup = async (req, res, next) => {
       role 
     });
 
-    // Generate JWT token
     const token = signToken(newUser);
 
     res.status(201).json({
@@ -56,16 +56,8 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.login(email, password);
 
-    if (!user || !(await user.correctPassword(password, user.password))) {
-      return res.status(401).json({
-        status: 'fail',
-        message: 'Incorrect email or password',
-      });
-    }
-
-    // Generate token
     const token = signToken(user);
 
     res.status(200).json({
@@ -79,7 +71,6 @@ exports.login = async (req, res, next) => {
 
 exports.forgotPassword = async (req, res, next) => {
   try {
-    // 1. Input validation
     if (!req.body.email) {
       return res.status(400).json({
         status: 'fail',
@@ -87,10 +78,9 @@ exports.forgotPassword = async (req, res, next) => {
       });
     }
 
-    // 2. Find user by email
     const user = await User.findOne({ email: req.body.email });
     
-    // 3. Always return the same response regardless of whether user exists
+    // Always return the same response regardless of whether user exists
     // This prevents user enumeration attacks
     if (!user) {
       return res.status(200).json({
@@ -99,14 +89,13 @@ exports.forgotPassword = async (req, res, next) => {
       });
     }
 
-    // 4. Generate reset token
+    // Generate reset token
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
 
-    // 5. Create reset URL
     const resetURL = `${req.protocol}://${req.get('host')}/api/v1/auth/resetPassword/${resetToken}`;
 
-    // 6. Send email (implement this function elsewhere)
+    // 6. Send email (implemented in email.js)
     try {
       await sendPasswordResetEmail(user.email, resetURL);
       
@@ -116,7 +105,6 @@ exports.forgotPassword = async (req, res, next) => {
         message: 'If a user with that email exists, a password reset link has been sent.'
       });
     } catch (err) {
-
       // 8. Handle email failure
       user.passwordResetToken = undefined;
       user.passwordResetExpires = undefined;
